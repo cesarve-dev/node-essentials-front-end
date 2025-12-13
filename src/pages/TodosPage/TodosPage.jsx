@@ -215,8 +215,8 @@ function TodosPage() {
           throw new Error(resp.message);
         }
         // const { records } = await resp.json();
-        const taskArray = await resp.json();
-        const records = taskArray.map((task) => {
+        const taskResp = await resp.json();
+        const records = taskResp.tasks.map((task) => {
           const record = { id: task.id, fields: task };
           // delete record.fields.id;
           return record;
