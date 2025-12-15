@@ -24,7 +24,7 @@ function Register() {
     }
     try {
       dispatch({ type: userActions.fetchUser });
-      const res = await fetch(`${urlBase}/api/users`, {
+      const res = await fetch(`${urlBase}/api/users/register`, {
         body: JSON.stringify({
           name,
           email,
@@ -39,7 +39,10 @@ function Register() {
       });
       const data = await res.json();
       if (res.status === 201 && data.user && data.csrfToken) {
-        dispatch({ type: userActions.loadUser, payload: data });
+        dispatch({ type: userActions.loadUser, payload: {
+          name: data.user.name,
+          csrfToken: data.csrfToken
+        }});
         navigate('/');
       } else if (res.status === 400 && data.message) {
         setError(data.message);
