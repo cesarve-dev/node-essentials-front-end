@@ -13,7 +13,9 @@ function TodosViewForm({
 
   useEffect(() => {
     const debounce = setTimeout(() => {
-      setQueryString(localQueryString);
+      if (localQueryString !== queryString) {
+        setQueryString(localQueryString);
+      }
     }, 500);
 
     return () => {
@@ -51,7 +53,8 @@ function TodosViewForm({
             value={sortField}
           >
             <option value="title">Title</option>
-            <option value="createdTime">Time Added</option>
+            <option value="createdAt">Time Added</option>
+            <option value="isCompleted">Is Completed</option>
           </select>
         </label>
         <label>

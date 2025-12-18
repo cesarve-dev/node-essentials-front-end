@@ -4,7 +4,7 @@ import {
   actions as userActions,
   context as UserContext,
 } from '../../reducers/user.reducer';
-import ReCAPTCHA from "react-google-recaptcha";
+import ReCAPTCHA from 'react-google-recaptcha';
 
 const urlBase = import.meta.env.VITE_BASE_URL;
 const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
@@ -19,12 +19,12 @@ function Register() {
 
   const handleRegisterSubmit = async (name, email, password) => {
     if (!token) {
-      alert("Please click that you are not a robot.");
+      alert('Please click that you are not a robot.');
       return;
     }
     try {
       dispatch({ type: userActions.fetchUser });
-      const res = await fetch(`${urlBase}/api/users`, {
+      const res = await fetch(`${urlBase}/api/users/register`, {
         body: JSON.stringify({
           name,
           email,
@@ -38,8 +38,11 @@ function Register() {
         credentials: 'include',
       });
       const data = await res.json();
-      if (res.status === 201 && data.name && data.csrfToken) {
-        dispatch({ type: userActions.loadUser, payload: data });
+      if (res.status === 201 && data.user && data.csrfToken) {
+        dispatch({ type: userActions.loadUser, payload: {
+          name: data.user.name,
+          csrfToken: data.csrfToken
+        }});
         navigate('/');
       } else if (res.status === 400 && data.message) {
         setError(data.message);
@@ -105,10 +108,10 @@ function Register() {
           <label htmlFor="password2">Confirm Your Password: </label>
           <input id="password2" name="passwordConfirmation" type="password"/>
           <br></br>
-                <ReCAPTCHA
-        sitekey={siteKey}
-        onChange={(token) => setToken(token)}
-      />
+          <ReCAPTCHA
+            sitekey={siteKey}
+            onChange={(token) => setToken(token)}
+          />
           <button type="submit">Submit</button>
           <button
             type="button"

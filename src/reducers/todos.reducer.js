@@ -13,7 +13,7 @@ const actions = {
 
 const initialState = {
   todoList: [],
-  isLoading: false,
+  isLoading: true,
   isSaving: false,
   errorMessage: '',
 };
@@ -28,18 +28,7 @@ function reducer(state = initialState, action) {
     case actions.loadTodos:
       return {
         ...state,
-        todoList: [
-          ...action.records.map((record) => {
-            const todo = {
-              id: record.id,
-              ...record.fields,
-            };
-            if (!record.fields.isCompleted) {
-              todo.isCompleted = false;
-            }
-            return todo;
-          }),
-        ],
+        todoList: action.tasks,
         isLoading: false,
       };
     case actions.setLoadError:
@@ -64,7 +53,7 @@ function reducer(state = initialState, action) {
       }
       return {
         ...state,
-        todoList: [...state.todoList, savedTodo],
+        todoList: [savedTodo, ...state.todoList],
         isSaving: false,
       };
     }

@@ -24,8 +24,16 @@ function AuthGoogleButton() {
           credentials: 'include',
         });
         const data = await res.json();
+        // login case
         if (res.status === 200 && data.name && data.csrfToken) {
           dispatch({ type: userActions.loadUser, payload: data });
+          navigate('/');
+        // register case
+        } else if (res.status === 201 && data.user && data.csrfToken) {
+          dispatch({ type: userActions.loadUser, payload: {
+            name: data.user.name,
+            csrfToken: data.csrfToken
+          }});
           navigate('/');
         } else {
           setError(`Authentication failed: ${data?.message}`);
