@@ -13,7 +13,9 @@ function TodosViewForm({
 
   useEffect(() => {
     const debounce = setTimeout(() => {
-      setQueryString(localQueryString);
+      if (localQueryString !== queryString) {
+        setQueryString(localQueryString);
+      }
     }, 500);
 
     return () => {

@@ -1,8 +1,10 @@
 import {useCallback, useContext, useEffect, useReducer, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
+import {useSearchParams} from 'react-router';
 import AuthLogoff from '../../features/AuthLogoff/AuthLogoff';
 import TodoForm from '../../features/TodoForm';
 import TodoList from '../../features/TodoList/TodoList';
+import TodoPaginationForm from '../../features/TodoPaginationForm';
 import TodosViewForm from '../../features/TodosViewForm';
 import {
   actions as userActions,
@@ -19,24 +21,41 @@ const urlBase = import.meta.env.VITE_BASE_URL;
 
 function TodosPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [sortDirection, setSortDirection] = useState('desc');
   const [sortField, setSortField] = useState('createdTime');
   const [queryString, setQueryString] = useState('');
+  const [page, setPage] = useState(parseInt(searchParams.get('page')) || 1);
+  const [total, setTotal] = useState(0);
+  const [limit, setLimit] = useState(10);
   const [todoState, dispatch] = useReducer(todosReducer, initialTodosState);
   const {userState, dispatch: dispatchUser} = useContext(UserContext);
+
+  const resetPage = () => {
+    setPage(1);
+    searchParams.delete('page');
+    setSearchParams(searchParams);
+  };
+
+  const handleSortDirectionChange = useCallback((newSortDirection) => {
+    setSortDirection(newSortDirection);
+    resetPage();
+  }, []);
+
+  const handleSortFieldChange = useCallback((newSortField) => {
+    setSortField(newSortField);
+    resetPage();
+  }, []);
+
+  const handleQueryStringChange = useCallback((newQueryString) => {
+    setQueryString(newQueryString);
+    resetPage();
+  }, []);
 
   //pessimistic
   const addTodo = async (newTodo) => {
     const payload = {
-      // records: [
-      //   {
-      //     fields: {
-      //       title: newTodo.title,
-      //       isCompleted: newTodo.isCompleted,
-      //     },
-      //   },
-      // ],
       title: newTodo.title,
       isCompleted: newTodo.isCompleted,
     };
@@ -64,7 +83,6 @@ function TodosPage() {
       const task = await resp.json();
       const records = [{ id: task.id, fields: task }];
       delete records[0].fields.id;
-      // const { records } = await resp.json();
       dispatch({ type: todoActions.addTodo, records });
     } catch (error) {
       dispatch({ type: todoActions.setLoadError, error });
@@ -82,17 +100,6 @@ function TodosPage() {
 
     try {
       const payload = {
-        // records: [
-        //   {
-        //     id: editedTodo.id,
-        //     fields: {
-        //       //explicitly only want these fields
-        //       title: editedTodo.title,
-        //       createdTime: editedTodo.createdTime,
-        //       isCompleted: editedTodo.isCompleted,
-        //     },
-        //   },
-        // ],
         title: editedTodo.title,
         createdTime: editedTodo.createdTime,
         isCompleted: editedTodo.isCompleted,
@@ -135,14 +142,6 @@ function TodosPage() {
 
     try {
       const payload = {
-        // records: [
-        //   {
-        //     id: id,
-        //     fields: {
-        //       isCompleted: true,
-        //     },
-        //   },
-        // ],
         isCompleted: true,
       };
       const options = {
@@ -180,30 +179,23 @@ function TodosPage() {
     navigate('/');
   }, [dispatchUser, navigate]);
 
-  //Airtable-specific URL with params
   const encodeUrl = useCallback(() => {
-    // const url = `https://api.airtable.com/v0/${import.meta.env.VITE_BASE_ID}/${import.meta.env.VITE_TABLE_NAME}`;
     const url = `${urlBase}/api/tasks`;
     let searchQuery = '';
-    // let sortQuery = `sort[0][field]=${sortField}&sort[0][direction]=${sortDirection}`;
     let orderby = sortField;
-    if (orderby == 'createdTime') orderby = 'creationDate';
+    if (orderby === 'createdTime') orderby = 'createdAt';
     const sortQuery = `sortBy=${orderby}&sortDirection=${sortDirection}`;
     if (queryString) {
-      // searchQuery = `&filterByFormula=SEARCH("${queryString}",+title)`;
       searchQuery = `&find=${queryString}`;
     }
-    return encodeURI(`${url}?${sortQuery}${searchQuery}`);
-  }, [queryString, sortField, sortDirection]);
+    return encodeURI(`${url}?page=${page}&limit=${limit}&${sortQuery}${searchQuery}`);
+  }, [page, limit, queryString, sortField, sortDirection]);
 
   useEffect(() => {
     const fetchTodos = async () => {
       dispatch({ type: todoActions.fetchTodos });
       const options = {
         method: 'GET',
-        headers: {
-          // Authorization: token,
-        },
         credentials: 'include',
       };
       try {
@@ -214,14 +206,12 @@ function TodosPage() {
         if (!resp.ok) {
           throw new Error(resp.message);
         }
-        // const { records } = await resp.json();
         const taskResp = await resp.json();
-        const records = taskResp.tasks.map((task) => {
-          const record = { id: task.id, fields: task };
-          // delete record.fields.id;
-          return record;
+        dispatch({
+          type: todoActions.loadTodos,
+          tasks: taskResp.tasks
         });
-        dispatch({ type: todoActions.loadTodos, records });
+        setTotal(taskResp.pagination.total);
       } catch (error) {
         dispatch({ type: todoActions.setLoadError, error });
       }
@@ -246,14 +236,21 @@ function TodosPage() {
         onCompleteTodo={completeTodo}
         onUpdateTodo={updateTodo}
       />
+      <TodoPaginationForm
+        isLoading={todoState.isLoading}
+        page={page}
+        setPage={setPage}
+        total={total}
+        limit={limit}
+      />
       <hr />
       <TodosViewForm
         queryString={queryString}
-        setQueryString={setQueryString}
+        setQueryString={handleQueryStringChange}
         sortDirection={sortDirection}
-        setSortDirection={setSortDirection}
+        setSortDirection={handleSortDirectionChange}
         sortField={sortField}
-        setSortField={setSortField}
+        setSortField={handleSortFieldChange}
       />
 
       {todoState.errorMessage && (
