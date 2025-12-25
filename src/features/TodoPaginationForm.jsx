@@ -40,7 +40,7 @@ function TodoPaginationForm({ isLoading, page, setPage, total, limit }) {
         <button
           type="button"
           onClick={handleNextPage}
-          disabled={page === totalPages || isLoading}
+          disabled={page >= totalPages || isLoading}
         >
           Next
         </button>

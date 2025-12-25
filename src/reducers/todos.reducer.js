@@ -3,6 +3,8 @@ const actions = {
   loadTodos: 'loadTodos',
   addTodo: 'addTodo',
   updateTodo: 'updateTodo',
+  deleteTodo: 'deleteTodo',
+  revertDeleteTodo: 'revertDeleteTodo',
   revertTodo: 'revertTodo',
   completeTodo: 'completeTodo',
   startRequest: 'startRequest',
@@ -96,6 +98,25 @@ function reducer(state = initialState, action) {
 
       return {
         ...updatedState,
+      };
+    }
+
+    case actions.deleteTodo:
+      return {
+        ...state,
+        todoList: state.todoList.filter(el => {
+          return el.id !== action.id;
+        })
+      };
+
+    case actions.revertDeleteTodo: {
+      const updatedTodos = state.todoList;
+      if (!updatedTodos.find((todo) => todo.id === action.revertTodoItem.id)) {
+        updatedTodos.splice(action.revertTodoIndex, 0, action.revertTodoItem);
+      }
+      return {
+        ...state,
+        todoList: updatedTodos
       };
     }
 

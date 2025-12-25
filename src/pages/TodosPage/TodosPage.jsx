@@ -24,11 +24,11 @@ function TodosPage() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [sortDirection, setSortDirection] = useState('desc');
-  const [sortField, setSortField] = useState('createdTime');
+  const [sortField, setSortField] = useState('createdAt');
   const [queryString, setQueryString] = useState('');
   const [page, setPage] = useState(parseInt(searchParams.get('page')) || 1);
   const [total, setTotal] = useState(0);
-  const [limit, setLimit] = useState(10);
+  const [limit] = useState(10);
   const [todoState, dispatch] = useReducer(todosReducer, initialTodosState);
   const {userState, dispatch: dispatchUser} = useContext(UserContext);
 
@@ -41,17 +41,17 @@ function TodosPage() {
   const handleSortDirectionChange = useCallback((newSortDirection) => {
     setSortDirection(newSortDirection);
     resetPage();
-  }, []);
+  }, []); // eslint-disable-line
 
   const handleSortFieldChange = useCallback((newSortField) => {
     setSortField(newSortField);
     resetPage();
-  }, []);
+  }, []); // eslint-disable-line
 
   const handleQueryStringChange = useCallback((newQueryString) => {
     setQueryString(newQueryString);
     resetPage();
-  }, []);
+  }, []); // eslint-disable-line
 
   //pessimistic
   const addTodo = async (newTodo) => {
@@ -83,6 +83,7 @@ function TodosPage() {
       const task = await resp.json();
       const records = [{ id: task.id, fields: task }];
       delete records[0].fields.id;
+      setTotal(total + 1);
       dispatch({ type: todoActions.addTodo, records });
     } catch (error) {
       dispatch({ type: todoActions.setLoadError, error });
@@ -127,6 +128,42 @@ function TodosPage() {
       dispatch({
         type: todoActions.revertTodo,
         editedTodo: originalTodo,
+        error,
+      });
+    } finally {
+      dispatch({ type: todoActions.endRequest });
+    }
+  };
+
+  //optimistic - uses catch to revert
+  const deleteTodo = async (editedTodo) => {
+    const originalTodoIndex = todoState.todoList.findIndex(
+      (todo) => todo.id === editedTodo.id
+    );
+    const originalTodo = todoState.todoList[originalTodoIndex];
+    dispatch({ type: todoActions.deleteTodo, id: editedTodo.id });
+    try {
+      const options = {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': userState?.userData?.csrfToken,
+        },
+        credentials: 'include',
+      };
+      const resp = await fetch(`${urlBase}/api/tasks/${editedTodo.id}`, options);
+      if (resp.status === 401) {
+        return onUnauthorized();
+      }
+      if (!resp.ok) {
+        throw new Error(resp.error);
+      }
+      setTotal(total - 1);
+    } catch (error) {
+      dispatch({
+        type: todoActions.revertDeleteTodo,
+        revertTodoIndex: originalTodoIndex,
+        revertTodoItem: originalTodo,
         error,
       });
     } finally {
@@ -182,9 +219,7 @@ function TodosPage() {
   const encodeUrl = useCallback(() => {
     const url = `${urlBase}/api/tasks`;
     let searchQuery = '';
-    let orderby = sortField;
-    if (orderby === 'createdTime') orderby = 'createdAt';
-    const sortQuery = `sortBy=${orderby}&sortDirection=${sortDirection}`;
+    const sortQuery = `sortBy=${sortField}&sortDirection=${sortDirection}`;
     if (queryString) {
       searchQuery = `&find=${queryString}`;
     }
@@ -202,6 +237,10 @@ function TodosPage() {
         const resp = await fetch(encodeUrl(), options);
         if (resp.status === 401) {
           return onUnauthorized();
+        }
+        if (resp.status === 404) {
+          setTotal(0);
+          return dispatch({type: todoActions.loadTodos, tasks: []});
         }
         if (!resp.ok) {
           throw new Error(resp.message);
@@ -233,8 +272,10 @@ function TodosPage() {
 
       <TodoList
         todoState={todoState}
+        queryString={queryString}
         onCompleteTodo={completeTodo}
         onUpdateTodo={updateTodo}
+        onDeleteTodo={deleteTodo}
       />
       <TodoPaginationForm
         isLoading={todoState.isLoading}
