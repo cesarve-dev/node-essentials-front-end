@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import TextInputWithLabel from '../../shared/TextInputWithLabel';
 import styles from './TodoListItem.module.css';
 
-function TodoListItem({ todo, onCompleteTodo, onUpdateTodo }) {
+function TodoListItem({ todo, onCompleteTodo, onUpdateTodo, onDeleteTodo }) {
   const [isEditing, setIsEditing] = useState(false);
   const [workingTitle, setWorkingTitle] = useState(todo.title);
   const todoTitleInput = useRef(null);
@@ -34,6 +34,14 @@ function TodoListItem({ todo, onCompleteTodo, onUpdateTodo }) {
     onUpdateTodo({ ...todo, title: workingTitle });
     setIsEditing(false);
   }
+  function handleDelete(event) {
+    if (!isEditing) {
+      return;
+    }
+    event.preventDefault();
+    onDeleteTodo({ ...todo, title: workingTitle });
+    setIsEditing(false);
+  }
 
   return (
     <li className={styles.todo}>
@@ -49,6 +57,9 @@ function TodoListItem({ todo, onCompleteTodo, onUpdateTodo }) {
             />
             <button type="button" onClick={handleCancel}>
               Cancel
+            </button>
+            <button type="button" onClick={handleDelete}>
+              Delete
             </button>
             <button type="button" onClick={handleUpdate}>
               Update

@@ -21,7 +21,7 @@ function TodosViewForm({
     return () => {
       clearTimeout(debounce);
     };
-  }, [localQueryString, setQueryString]);
+  }, [localQueryString, setQueryString, queryString]);
 
   function preventRefresh(e) {
     e.preventDefault();
