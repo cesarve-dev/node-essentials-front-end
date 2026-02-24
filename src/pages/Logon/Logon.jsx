@@ -5,7 +5,8 @@ import {
   context as UserContext,
 } from '../../reducers/user.reducer';
 
-const urlBase = import.meta.env.VITE_BASE_URL;
+// const urlBase = import.meta.env.VITE_BASE_URL;
+const urlBase = '';
 
 function Logon() {
   const navigate = useNavigate();

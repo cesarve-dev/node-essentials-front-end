@@ -6,7 +6,8 @@ import {
 } from '../../reducers/user.reducer';
 import ReCAPTCHA from 'react-google-recaptcha';
 
-const urlBase = import.meta.env.VITE_BASE_URL;
+// const urlBase = import.meta.env.VITE_BASE_URL;
+const urlBase = '';
 const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
 
 function Register() {
