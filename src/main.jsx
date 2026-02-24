@@ -7,12 +7,22 @@ import App from './App.jsx';
 
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
-createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <GoogleOAuthProvider clientId={googleClientId}>
+if (!googleClientId) {
+  createRoot(document.getElementById('root')).render(
+    <StrictMode>
       <BrowserRouter>
         <App />
       </BrowserRouter>
-    </GoogleOAuthProvider>
-  </StrictMode>
-);
+    </StrictMode>
+  );
+} else {
+  createRoot(document.getElementById('root')).render(
+    <StrictMode>
+      <GoogleOAuthProvider clientId={googleClientId}>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </GoogleOAuthProvider>
+    </StrictMode>
+  );
+}

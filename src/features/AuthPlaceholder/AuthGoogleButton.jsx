@@ -3,7 +3,8 @@ import {useNavigate} from 'react-router-dom';
 import {useGoogleLogin} from '@react-oauth/google';
 import {actions as userActions, context as UserContext} from '../../reducers/user.reducer.js';
 
-const urlBase = import.meta.env.VITE_BASE_URL;
+// const urlBase = import.meta.env.VITE_BASE_URL;
+const urlBase = '';
 
 function AuthGoogleButton() {
   const navigate = useNavigate();

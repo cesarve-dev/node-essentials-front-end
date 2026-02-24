@@ -17,7 +17,8 @@ import {
 } from '../../reducers/todos.reducer';
 import styles from '../../App.module.css';
 
-const urlBase = import.meta.env.VITE_BASE_URL;
+// const urlBase = import.meta.env.VITE_BASE_URL;
+const urlBase='';
 
 function TodosPage() {
   const navigate = useNavigate();

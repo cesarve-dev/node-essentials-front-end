@@ -1,7 +1,8 @@
 import {useContext, useState} from 'react';
 import {actions as userActions, context as UserContext} from '../../reducers/user.reducer.js';
 
-const urlBase = import.meta.env.VITE_BASE_URL;
+// const urlBase = import.meta.env.VITE_BASE_URL;
+const urlBase='';
 
 function AuthLogoff() {
   const {dispatch, userState} = useContext(UserContext);

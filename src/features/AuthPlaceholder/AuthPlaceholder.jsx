@@ -2,6 +2,7 @@ import {useContext} from 'react';
 import {useNavigate} from 'react-router-dom';
 import AuthGoogleButton from './AuthGoogleButton';
 import {actions as userActions, context as UserContext} from '../../reducers/user.reducer.js';
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 function AuthPlaceholder() {
   const navigate = useNavigate();
@@ -31,8 +32,7 @@ function AuthPlaceholder() {
           >
             Register
           </button>
-          <br></br>
-          <AuthGoogleButton />
+          {googleClientId && <br></br> && <AuthGoogleButton />}
           <br></br>
           <br></br>
           {userState?.errorMessage && <p>{userState?.errorMessage}</p>}
